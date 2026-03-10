@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heva — Configuración</title>
+<style>
+  :root {
+    --navy: #0D1B2E; --navym: #1E3A5F; --navyl: #2A4F7A;
+    --accent: #C8F135; --white: #FFFFFF;
+    --text: #1A2A3A; --muted: #5A7A9A; --light: #EAF2FB;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--navy); color:var(--white); min-height:100vh; }
+
+  /* ── PROGRESS ── */
+  .progress-bar { position:fixed; top:0; left:0; width:100%; height:4px; background:rgba(255,255,255,.1); z-index:100; }
+  .progress-fill { height:100%; background:var(--accent); transition:width .4s ease; }
+
+  /* ── SCREEN ── */
+  .screen { display:none; min-height:100vh; flex-direction:column; justify-content:center; align-items:center; padding:40px 24px; animation:fadeUp .4s ease; }
+  .screen.active { display:flex; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── WELCOME ── */
+  .welcome .logo { font-size:2.8rem; font-weight:800; color:var(--white); letter-spacing:-1px; margin-bottom:4px; }
+  .welcome .logo span { color:var(--accent); }
+  .welcome .tag { color:var(--muted); font-size:.9rem; margin-bottom:48px; }
+  .welcome h1 { font-size:1.8rem; font-weight:700; text-align:center; max-width:460px; line-height:1.3; margin-bottom:16px; }
+  .welcome p { color:#8fa8c8; font-size:1rem; text-align:center; max-width:400px; line-height:1.6; margin-bottom:48px; }
+  .steps { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:48px; }
+  .step-chip { background:rgba(200,241,53,.12); border:1px solid rgba(200,241,53,.3); color:var(--accent); padding:6px 16px; border-radius:20px; font-size:.82rem; font-weight:600; }
+
+  /* ── SECTION SCREENS ── */
+  .section-screen { max-width:600px; width:100%; }
+  .sec-label { font-size:.75rem; font-weight:700; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
+  .sec-title { font-size:1.6rem; font-weight:700; line-height:1.3; margin-bottom:8px; }
+  .sec-sub { color:#8fa8c8; font-size:.95rem; line-height:1.5; margin-bottom:36px; }
+
+  /* ── FIELDS ── */
+  .field { margin-bottom:24px; }
+  .field label { display:block; font-size:.9rem; font-weight:600; color:#c8dff0; margin-bottom:8px; }
+  .field .hint { font-size:.78rem; color:var(--muted); margin-bottom:8px; }
+  .field input, .field textarea, .field select {
+    width:100%; background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.15);
+    border-radius:10px; padding:14px 16px; color:var(--white); font-size:.95rem;
+    font-family:inherit; transition:border-color .2s, background .2s; outline:none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color:var(--accent); background:rgba(200,241,53,.06);
+  }
+  .field textarea { resize:vertical; min-height:90px; }
+  .field select option { background:var(--navy); }
+
+  /* ── RADIO / CHECK ── */
+  .options { display:flex; flex-direction:column; gap:10px; }
+  .opt { display:flex; align-items:center; gap:12px; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:10px; padding:14px 16px; cursor:pointer; transition:all .2s; }
+  .opt:hover { border-color:rgba(200,241,53,.5); background:rgba(200,241,53,.06); }
+  .opt.selected { border-color:var(--accent); background:rgba(200,241,53,.1); }
+  .opt input { display:none; }
+  .opt-dot { width:20px; height:20px; border-radius:50%; border:2px solid rgba(255,255,255,.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .opt.selected .opt-dot { border-color:var(--accent); background:var(--accent); }
+  .opt.selected .opt-dot::after { content:''; width:8px; height:8px; border-radius:50%; background:var(--navy); }
+  .opt-check { width:20px; height:20px; border-radius:5px; border:2px solid rgba(255,255,255,.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .opt.selected .opt-check { border-color:var(--accent); background:var(--accent); }
+  .opt.selected .opt-check::after { content:'✓'; color:var(--navy); font-size:13px; font-weight:900; }
+  .opt-label { font-size:.95rem; }
+
+  /* ── TABLE FIELDS (usuarios/procedimientos) ── */
+  .tbl-row { display:grid; gap:8px; margin-bottom:8px; }
+  .tbl-row input { background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.1); border-radius:8px; padding:10px 12px; color:var(--white); font-size:.88rem; font-family:inherit; outline:none; transition:border-color .2s; }
+  .tbl-row input:focus { border-color:var(--accent); }
+  .tbl-hdr { display:grid; gap:8px; margin-bottom:6px; }
+  .tbl-hdr span { font-size:.75rem; font-weight:700; color:var(--accent); letter-spacing:.5px; }
+  .add-btn { display:inline-flex; align-items:center; gap:8px; background:rgba(200,241,53,.1); border:1.5px dashed rgba(200,241,53,.4); color:var(--accent); padding:10px 20px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; margin-top:4px; transition:all .2s; }
+  .add-btn:hover { background:rgba(200,241,53,.18); }
+  .del-btn { background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:1.1rem; padding:0 4px; }
+
+  /* ── SCHEDULE ── */
+  .day-row { display:grid; grid-template-columns:110px 90px 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+  .day-name { font-size:.9rem; font-weight:600; color:#c8dff0; }
+  .toggle { display:flex; align-items:center; }
+  .toggle input[type=checkbox] { display:none; }
+  .toggle-track { width:44px; height:24px; background:rgba(255,255,255,.15); border-radius:12px; cursor:pointer; position:relative; transition:background .2s; }
+  .toggle input:checked + .toggle-track { background:var(--accent); }
+  .toggle-track::after { content:''; position:absolute; width:18px; height:18px; background:white; border-radius:50%; top:3px; left:3px; transition:left .2s; }
+  .toggle input:checked + .toggle-track::after { left:23px; background:var(--navy); }
+  .day-row input[type=time] { background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.1); border-radius:8px; padding:8px 10px; color:var(--white); font-size:.88rem; font-family:inherit; outline:none; }
+  .day-row input[type=time]:focus { border-color:var(--accent); }
+  .day-row input[type=time]:disabled { opacity:.3; }
+
+  /* ── NAV BUTTONS ── */
+  .nav { display:flex; gap:12px; margin-top:36px; flex-wrap:wrap; }
+  .btn-next { background:var(--accent); color:var(--navy); border:none; padding:14px 32px; border-radius:50px; font-size:1rem; font-weight:700; cursor:pointer; transition:transform .15s,box-shadow .15s; }
+  .btn-next:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(200,241,53,.35); }
+  .btn-back { background:rgba(255,255,255,.08); color:var(--white); border:1.5px solid rgba(255,255,255,.15); padding:14px 24px; border-radius:50px; font-size:1rem; cursor:pointer; transition:all .2s; }
+  .btn-back:hover { background:rgba(255,255,255,.14); }
+
+  /* ── SUMMARY ── */
+  .summary-wrap { max-width:680px; width:100%; }
+  .summary-wrap h2 { font-size:1.8rem; font-weight:700; margin-bottom:8px; }
+  .summary-wrap .sub { color:#8fa8c8; font-size:.95rem; margin-bottom:32px; }
+  .sum-sec { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; margin-bottom:16px; overflow:hidden; }
+  .sum-sec-title { background:rgba(255,255,255,.08); padding:12px 20px; font-size:.8rem; font-weight:700; letter-spacing:1.5px; color:var(--accent); text-transform:uppercase; }
+  .sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .sum-item { padding:12px 20px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .sum-item:last-child { border-bottom:none; }
+  .sum-item.full { grid-column:1/-1; }
+  .sum-key { font-size:.78rem; color:var(--muted); margin-bottom:3px; }
+  .sum-val { font-size:.92rem; color:var(--white); font-weight:500; word-break:break-word; }
+  .sum-val.empty { color:rgba(255,255,255,.25); font-style:italic; }
+  .sum-table { width:100%; border-collapse:collapse; }
+  .sum-table th { text-align:left; font-size:.75rem; color:var(--accent); padding:8px 20px; border-bottom:1px solid rgba(255,255,255,.08); }
+  .sum-table td { padding:8px 20px; font-size:.85rem; border-bottom:1px solid rgba(255,255,255,.05); }
+  .sum-table tr:last-child td { border-bottom:none; }
+  .copy-btn { background:var(--accent); color:var(--navy); border:none; padding:14px 32px; border-radius:50px; font-size:1rem; font-weight:700; cursor:pointer; margin-right:12px; transition:transform .15s; }
+  .copy-btn:hover { transform:translateY(-2px); }
+  .restart-btn { background:rgba(255,255,255,.08); color:var(--white); border:1.5px solid rgba(255,255,255,.15); padding:14px 24px; border-radius:50px; font-size:1rem; cursor:pointer; }
+  .check-icon { font-size:3rem; margin-bottom:16px; }
+
+  @media(max-width:500px){
+    .day-row{grid-template-columns:90px 60px 1fr 1fr;gap:6px}
+    .sum-grid{grid-template-columns:1fr}
+    .welcome h1{font-size:1.4rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+
+<!-- ══ WELCOME ══ -->
+<div class="screen active" id="s0">
+  <div class="welcome" style="text-align:center;max-width:500px">
+    <div class="logo">heva</div>
+    <div class="tag">Care | Without Borders</div>
+    <h1>Bienvenido a tu configuración de Heva</h1>
+    <p>En menos de 10 minutos tendremos todo lo que necesitamos para dejarte listo. Sin complicaciones.</p>
+    <div class="steps">
+      <span class="step-chip">📋 Datos generales</span>
+      <span class="step-chip">👥 Usuarios</span>
+      <span class="step-chip">💳 Pagos</span>
+      <span class="step-chip">🕐 Horarios</span>
+      <span class="step-chip">🔗 Integraciones</span>
+      <span class="step-chip">🏥 Procedimientos</span>
+    </div>
+    <button class="btn-next" onclick="go(1)">Comenzar →</button>
+  </div>
+</div>
+
+<!-- ══ S1: DATOS GENERALES ══ -->
+<div class="screen" id="s1">
+  <div class="section-screen">
+    <div class="sec-label">Paso 1 de 7</div>
+    <div class="sec-title">Cuéntanos sobre tu práctica</div>
+    <div class="sec-sub">Esta información aparecerá en tu perfil de Heva.</div>
+    <div class="field"><label>Nombre de la clínica, médico u hospital *</label><input type="text" id="f_nombre" placeholder="Ej: Clínica Oftalmológica Pérez / Dr. Juan García"></div>
+    <div class="field"><label>Especialidad(es) *</label><div class="hint">Si tienes varias, sepáralas con coma</div><input type="text" id="f_esp" placeholder="Ej: Oftalmología, Cirugía Refractiva"></div>
+    <div class="field"><label>Dirección completa *</label><div class="hint">Calle, número, colonia, ciudad, estado y país</div><input type="text" id="f_loc" placeholder="Ej: Av. Paseo del Centenario 9580, Col. El Paraíso, Tijuana, B.C., México"></div>
+    <div class="nav"><button class="btn-back" onclick="go(0)">← Atrás</button><button class="btn-next" onclick="go(2)">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ══ S2: USUARIOS ══ -->
+<div class="screen" id="s2">
+  <div class="section-screen">
+    <div class="sec-label">Paso 2 de 7</div>
+    <div class="sec-title">¿Quiénes tendrán acceso?</div>
+    <div class="sec-sub">Heva usa Magic Link — cada persona recibirá un enlace único en su correo para entrar a la plataforma. Sin contraseñas.</div>
+    <div class="tbl-hdr" style="grid-template-columns:1fr 1.4fr 1fr"><span>Nombre</span><span>Correo electrónico</span><span>Rol / Puesto</span></div>
+    <div id="users-list"></div>
+    <div class="add-btn" onclick="addUser()">+ Agregar usuario</div>
+    <div class="nav"><button class="btn-back" onclick="go(1)">← Atrás</button><button class="btn-next" onclick="go(3)">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ══ S3: PAGOS ══ -->
+<div class="screen" id="s3">
+  <div class="section-screen">
+    <div class="sec-label">Paso 3 de 7</div>
+    <div class="sec-title">Consulta y pagos</div>
+    <div class="sec-sub">Configura cómo cobrarás a tus pacientes.</div>
+    <div class="field"><label>Precio de consulta (USD)</label><div class="hint">Si manejas virtual y presencial, indícalo aquí</div><input type="text" id="f_precio" placeholder="Ej: $50 presencial / $35 virtual"></div>
+    <div class="field"><label>¿Requieren depósito para agendar?</label>
+      <div class="options">
+        <label class="opt" onclick="selectOpt(this,'dep')"><input type="radio" name="dep"><div class="opt-dot"></div><span class="opt-label">No, sin depósito</span></label>
+        <label class="opt" onclick="selectOpt(this,'dep')"><input type="radio" name="dep"><div class="opt-dot"></div><span class="opt-label">Sí, requiero depósito</span></label>
+      </div>
+    </div>
+    <div class="field" id="dep-amount" style="display:none"><label>Monto del depósito (USD)</label><input type="text" id="f_dep" placeholder="Ej: $30"></div>
+    <div class="field"><label>Política de reembolsos</label>
+      <div class="options">
+        <label class="opt" onclick="selectOpt(this,'ref')"><input type="radio" name="ref"><div class="opt-dot"></div><span class="opt-label">Sin reembolso</span></label>
+        <label class="opt" onclick="selectOpt(this,'ref')"><input type="radio" name="ref"><div class="opt-dot"></div><span class="opt-label">Reembolso parcial</span></label>
+        <label class="opt" onclick="selectOpt(this,'ref')"><input type="radio" name="ref"><div class="opt-dot"></div><span class="opt-label">Reembolso total</span></label>
+      </div>
+    </div>
+    <div class="field"><label>Condiciones del reembolso (opcional)</label><input type="text" id="f_refcond" placeholder="Ej: Solo si cancela con 48 hrs de anticipación"></div>
+    <div class="nav"><button class="btn-back" onclick="go(2)">← Atrás</button><button class="btn-next" onclick="go(4)">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ══ S4: HORARIOS ══ -->
+<div class="screen" id="s4">
+  <div class="section-screen">
+    <div class="sec-label">Paso 4 de 7</div>
+    <div class="sec-title">Horarios de atención</div>
+    <div class="sec-sub">Activa los días en que Heva recibirá y agendará pacientes. Puedes ajustar las horas.</div>
+    <div id="schedule"></div>
+    <div class="nav"><button class="btn-back" onclick="go(3)">← Atrás</button><button class="btn-next" onclick="go(5)">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ══ S5: INTEGRACIONES ══ -->
+<div class="screen" id="s5">
+  <div class="section-screen">
+    <div class="sec-label">Paso 5 de 7</div>
+    <div class="sec-title">Integraciones y financiamiento</div>
+    <div class="sec-sub">¿Dónde quieres que Heva responda a tus pacientes?</div>
+    <div class="field"><label>Canales a integrar</label>
+      <div class="options" id="canales-opts">
+        <div class="opt" id="ch_wa" onclick="toggleCanal('ch_wa')"><div class="opt-check" id="chk_wa"></div><span class="opt-label">WhatsApp</span></div>
+        <div class="opt" id="ch_ig" onclick="toggleCanal('ch_ig')"><div class="opt-check" id="chk_ig"></div><span class="opt-label">Instagram</span></div>
+        <div class="opt" id="ch_web" onclick="toggleCanal('ch_web')"><div class="opt-check" id="chk_web"></div><span class="opt-label">Página Web (chat widget)</span></div>
+      </div>
+    </div>
+    <div class="field"><label>Handle de Instagram (si aplica)</label><input type="text" id="f_ig" placeholder="@clinicaejemplo"></div>
+    <div class="field"><label>URL de tu página web (si aplica)</label><input type="text" id="f_web" placeholder="www.clinicaejemplo.com"></div>
+    <div class="field"><label>¿Deseas ofrecer financiamiento a tus pacientes?</label>
+      <div class="options">
+        <label class="opt" onclick="selectOpt(this,'fin')"><input type="radio" name="fin"><div class="opt-dot"></div><span class="opt-label">Sí, quiero ofrecer financiamiento</span></label>
+        <label class="opt" onclick="selectOpt(this,'fin')"><input type="radio" name="fin"><div class="opt-dot"></div><span class="opt-label">No por el momento</span></label>
+      </div>
+    </div>
+    <div class="nav"><button class="btn-back" onclick="go(4)">← Atrás</button><button class="btn-next" onclick="go(6)">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ══ S6: BREX + PROCEDIMIENTOS ══ -->
+<div class="screen" id="s6">
+  <div class="section-screen">
+    <div class="sec-label">Paso 6 de 7</div>
+    <div class="sec-title">Cuenta bancaria y procedimientos</div>
+    <div class="sec-sub">Casi terminamos. Solo necesitamos saber dónde depositarte y qué ofreces.</div>
+
+    <div style="background:rgba(200,241,53,.08);border:1px solid rgba(200,241,53,.25);border-radius:12px;padding:16px 20px;margin-bottom:24px">
+      <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:6px">💳 DATOS BANCARIOS — BREX</div>
+      <div style="font-size:.85rem;color:#8fa8c8;margin-bottom:14px">Este correo recibirá el link para conectar tu cuenta bancaria. Puede ser diferente a los correos de acceso.</div>
+      <div class="field" style="margin-bottom:12px"><label>Correo para el link de Brex</label><input type="email" id="f_brex" placeholder="admin@tuclinica.com"></div>
+      <div class="field" style="margin-bottom:0"><label>Nombre del titular de la cuenta</label><input type="text" id="f_titular" placeholder="Persona física o moral"></div>
+    </div>
+
+    <div class="field"><label>Tus procedimientos</label><div class="hint">Agrega cada procedimiento con su precio. Si el precio varía, usa rango (Ej: $3,000 – $6,000).</div></div>
+    <div class="tbl-hdr" style="grid-template-columns:1.6fr 1fr 1fr .4fr"><span>Procedimiento</span><span>Precio fijo (USD)</span><span>Rango (USD)</span><span></span></div>
+    <div id="procs-list"></div>
+    <div class="add-btn" onclick="addProc()">+ Agregar procedimiento</div>
+
+    <div class="field" style="margin-top:24px"><label>Notas adicionales (opcional)</label><textarea id="f_notas" placeholder="Cualquier información extra para la configuración…"></textarea></div>
+    <div class="nav"><button class="btn-back" onclick="go(5)">← Atrás</button><button class="btn-next" onclick="buildSummary();go(7)">Ver resumen →</button></div>
+  </div>
+</div>
+
+<!-- ══ S7: RESUMEN ══ -->
+<div class="screen" id="s7">
+  <div class="summary-wrap">
+    <div class="check-icon">✅</div>
+    <h2>¡Todo listo!</h2>
+    <p class="sub">Revisa tu información antes de enviárnosla. Si algo no está bien, puedes regresar y corregirlo.</p>
+    <div id="summary-content"></div>
+    <div style="margin-top:28px;display:flex;flex-wrap:wrap;gap:12px">
+      <button class="copy-btn" onclick="copyAll()">📋 Copiar resumen</button>
+      <button class="restart-btn" onclick="go(1)">✏️ Editar respuestas</button>
+    </div>
+    <p style="color:var(--muted);font-size:.8rem;margin-top:20px">Copia este resumen y envíalo por WhatsApp o correo a tu asesor de Heva.</p>
+  </div>
+</div>
+
+<script>
+// ── State ──
+const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+let userCount = 0, procCount = 0;
+const totalSteps = 7;
+
+// ── Init ──
+function init() {
+  // Users
+  addUser(); addUser();
+  // Schedule
+  const sch = document.getElementById('schedule');
+  DAYS.forEach((d,i) => {
+    const active = i < 5;
+    sch.innerHTML += `
+    <div class="day-row" id="dr_${i}">
+      <span class="day-name">${d}</span>
+      <label class="toggle"><input type="checkbox" id="day_${i}" ${active?'checked':''} onchange="toggleDay(${i})">
+        <div class="toggle-track"></div></label>
+      <input type="time" id="open_${i}" value="09:00" ${!active?'disabled':''}>
+      <input type="time" id="close_${i}" value="18:00" ${!active?'disabled':''}>
+    </div>`;
+  });
+  // Procs
+  addProc(); addProc();
+  // Deposit toggle
+  document.querySelectorAll('[name=dep]').forEach((r,i) => r.addEventListener('change', () => {
+    document.getElementById('dep-amount').style.display = i===1 ? 'block' : 'none';
+  }));
+}
+
+// ── Nav ──
+function go(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  const pct = n === 0 ? 0 : Math.round((n/totalSteps)*100);
+  document.getElementById('prog').style.width = pct+'%';
+  window.scrollTo(0,0);
+}
+
+// ── Opts ──
+function selectOpt(el, name) {
+  document.querySelectorAll(`[name=${name}]`).forEach(r => r.closest('.opt').classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+  const _canales = {ch_wa: false, ch_ig: false, ch_web: false};
+  const _labels  = {ch_wa: 'WhatsApp', ch_ig: 'Instagram', ch_web: 'Página Web'};
+  function toggleCanal(id) {
+    _canales[id] = !_canales[id];
+    const opt = document.getElementById(id);
+    const chk = document.getElementById('chk_' + id.split('_')[1]);
+    opt.classList.toggle('selected', _canales[id]);
+    chk.style.background   = _canales[id] ? '#C8F135' : '';
+    chk.style.borderColor  = _canales[id] ? '#C8F135' : '';
+    chk.innerHTML          = _canales[id] ? '<span style="color:#0D1B2E;font-weight:900;font-size:13px">✓</span>' : '';
+  }
+  function getCanales() {
+    return Object.entries(_canales).filter(([,v])=>v).map(([k])=>_labels[k]).join(', ');
+  }
+
+  function toggleCheck(el) {
+  el.classList.toggle('selected');
+  el.querySelector('input').checked = el.classList.contains('selected');
+}
+
+// ── Toggle day ──
+function toggleDay(i) {
+  const on = document.getElementById('day_'+i).checked;
+  document.getElementById('open_'+i).disabled = !on;
+  document.getElementById('close_'+i).disabled = !on;
+}
+
+// ── Add rows ──
+function addUser() {
+  const id = userCount++;
+  const d = document.getElementById('users-list');
+  const row = document.createElement('div');
+  row.className = 'tbl-row'; row.id = 'ur_'+id;
+  row.style.gridTemplateColumns = '1fr 1.4fr 1fr auto';
+  row.innerHTML = `<input type="text" placeholder="Nombre" id="un_${id}">
+    <input type="email" placeholder="correo@ejemplo.com" id="ue_${id}">
+    <input type="text" placeholder="Ej: Recepción" id="ur2_${id}">
+    <button class="del-btn" onclick="document.getElementById('ur_${id}').remove()">✕</button>`;
+  d.appendChild(row);
+}
+
+function addProc() {
+  const id = procCount++;
+  const d = document.getElementById('procs-list');
+  const row = document.createElement('div');
+  row.className = 'tbl-row'; row.id = 'pr_'+id;
+  row.style.gridTemplateColumns = '1.6fr 1fr 1fr auto';
+  row.innerHTML = `<input type="text" placeholder="Nombre del procedimiento" id="pn_${id}">
+    <input type="text" placeholder="Ej: $1,500" id="pf_${id}">
+    <input type="text" placeholder="Ej: $1,000–$3,000" id="pp_${id}">
+    <button class="del-btn" onclick="document.getElementById('pr_${id}').remove()">✕</button>`;
+  d.appendChild(row);
+}
+
+// ── Summary ──
+function buildSummary() {
+  // Collect
+  const d = {};
+  d.nombre  = v('f_nombre'); d.esp = v('f_esp'); d.loc = v('f_loc');
+  d.precio  = v('f_precio'); d.dep = v('f_dep');
+  d.depOpt  = selOpt('dep'); d.refOpt = selOpt('ref'); d.refCond = v('f_refcond');
+  d.ig = v('f_ig'); d.web = v('f_web'); d.fin = selOpt('fin');
+  d.brex = v('f_brex'); d.titular = v('f_titular'); d.notas = v('f_notas');
+  d.canales = getCanales();
+
+  // Users
+  const users = [];
+  document.querySelectorAll('[id^=ur_]').forEach(row => {
+    const id = row.id.split('_')[1];
+    const n=v('un_'+id), e=v('ue_'+id), r=v('ur2_'+id);
+    if(n||e) users.push({n,e,r});
+  });
+
+  // Schedule
+  const sched = [];
+  DAYS.forEach((day,i) => {
+    if(document.getElementById('day_'+i)?.checked)
+      sched.push({day, open:v('open_'+i), close:v('close_'+i)});
+  });
+
+  // Procs
+  const procs = [];
+  document.querySelectorAll('[id^=pr_]').forEach(row => {
+    const id = row.id.split('_')[1];
+    const n=v('pn_'+id), f=v('pf_'+id), p=v('pp_'+id);
+    if(n) procs.push({n,f,p});
+  });
+
+  // Render
+  let html = '';
+
+  html += sec('1. Datos generales', [
+    {k:'Clínica / Médico', v:d.nombre}, {k:'Especialidad(es)', v:d.esp}, {k:'Ubicación', v:d.loc}
+  ]);
+
+  html += `<div class="sum-sec"><div class="sum-sec-title">2. Usuarios con acceso</div>`;
+  if(users.length) {
+    html += `<table class="sum-table"><tr><th>Nombre</th><th>Correo</th><th>Rol</th></tr>`;
+    users.forEach(u => html += `<tr><td>${u.n||'—'}</td><td>${u.e||'—'}</td><td>${u.r||'—'}</td></tr>`);
+    html += `</table>`;
+  } else html += `<div class="sum-item full"><div class="sum-val empty">Sin usuarios registrados</div></div>`;
+  html += `</div>`;
+
+  html += sec('3. Consulta y pagos', [
+    {k:'Precio consulta', v:d.precio}, {k:'Depósito requerido', v:d.depOpt+(d.dep?' — '+d.dep:'')},
+    {k:'Política reembolsos', v:d.refOpt}, {k:'Condiciones', v:d.refCond}
+  ]);
+
+  html += `<div class="sum-sec"><div class="sum-sec-title">4. Horarios de atención</div>`;
+  if(sched.length) {
+    html += `<table class="sum-table"><tr><th>Día</th><th>Apertura</th><th>Cierre</th></tr>`;
+    sched.forEach(s => html += `<tr><td>${s.day}</td><td>${s.open}</td><td>${s.close}</td></tr>`);
+    html += `</table>`;
+  } html += `</div>`;
+
+  html += sec('5. Integraciones y financiamiento', [
+    {k:'Canales', v:d.canales}, {k:'Instagram', v:d.ig}, {k:'Página web', v:d.web}, {k:'Financiamiento', v:d.fin}
+  ]);
+
+  html += sec('6. Datos bancarios', [
+    {k:'Correo Brex', v:d.brex}, {k:'Titular cuenta', v:d.titular}
+  ]);
+
+  html += `<div class="sum-sec"><div class="sum-sec-title">7. Procedimientos</div>`;
+  if(procs.length) {
+    html += `<table class="sum-table"><tr><th>Procedimiento</th><th>Precio fijo</th><th>Rango</th></tr>`;
+    procs.forEach(p => html += `<tr><td>${p.n}</td><td>${p.f||'—'}</td><td>${p.p||'—'}</td></tr>`);
+    html += `</table>`;
+  } else html += `<div class="sum-item full"><div class="sum-val empty">Sin procedimientos</div></div>`;
+  html += `</div>`;
+
+  if(d.notas) html += sec('Notas adicionales', [{k:'', v:d.notas, full:true}]);
+
+  document.getElementById('summary-content').innerHTML = html;
+  window._summaryData = {d, users, sched, procs};
+  // Enviar automáticamente
+  enviarDatos({...d, users, sched, procs});
+}
+
+function sec(title, items) {
+  let h = `<div class="sum-sec"><div class="sum-sec-title">${title}</div><div class="sum-grid">`;
+  items.forEach(i => {
+    const val = i.v && i.v.trim() ? i.v : null;
+    h += `<div class="sum-item${i.full?' full':''}"><div class="sum-key">${i.k}</div><div class="sum-val${!val?' empty':''}">${val||'No especificado'}</div></div>`;
+  });
+  return h + '</div></div>';
+}
+
+function v(id) { return (document.getElementById(id)?.value||'').trim(); }
+function selOpt(name) { const el=document.querySelector(`[name=${name}]:checked`); return el?el.closest('.opt').querySelector('.opt-label').textContent:''; }
+
+// ── Enviar a Google Sheets ──
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyKcT18hsjDjUCw0ECAAMGvcIBA7NlgggGGTdQYygiFuXrmLjhhbMD02Cula6PUSIa8/exec";
+
+function copyAll() {
+  const sd = window._summaryData;
+  if(!sd) return;
+  const {d, users, sched, procs} = sd;
+  let txt = `HEVA — CONFIGURACIÓN\n${'═'.repeat(40)}\n\n`;
+  txt += `DATOS GENERALES\nClínica/Médico: ${d.nombre}\nEspecialidad: ${d.esp}\nUbicación: ${d.loc}\n\n`;
+  txt += `USUARIOS\n${users.map(u=>`• ${u.n} | ${u.e} | ${u.r}`).join('\n')||'—'}\n\n`;
+  txt += `PAGOS\nConsulta: ${d.precio}\nDepósito: ${d.depOpt}${d.dep?' — '+d.dep:''}\nReembolsos: ${d.refOpt}\nCondiciones: ${d.refCond||'—'}\n\n`;
+  txt += `HORARIOS\n${sched.map(s=>`• ${s.day}: ${s.open} – ${s.close}`).join('\n')||'—'}\n\n`;
+  txt += `INTEGRACIONES\nCanales: ${d.canales||'—'}\nInstagram: ${d.ig||'—'}\nWeb: ${d.web||'—'}\nFinanciamiento: ${d.fin||'—'}\n\n`;
+  txt += `DATOS BANCARIOS\nCorreo Brex: ${d.brex}\nTitular: ${d.titular}\n\n`;
+  txt += `PROCEDIMIENTOS\n${procs.map(p=>`• ${p.n} | Precio fijo: ${p.f||'—'} | Rango: ${p.p||'—'}`).join('\n')||'—'}\n\n`;
+  if(d.notas) txt += `NOTAS\n${d.notas}\n`;
+  navigator.clipboard.writeText(txt).then(()=>alert('✅ Resumen copiado al portapapeles'));
+}
+
+init();
+</script>
+</body>
+</html>
