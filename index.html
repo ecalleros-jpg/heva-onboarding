@@ -256,7 +256,7 @@
     <div class="add-btn" onclick="addProc()">+ Agregar procedimiento</div>
 
     <div class="field" style="margin-top:24px"><label>Notas adicionales (opcional)</label><textarea id="f_notas" placeholder="Cualquier información extra para la configuración…"></textarea></div>
-    <div class="nav"><button class="btn-back" onclick="go(5)">← Atrás</button><button class="btn-next" onclick="buildSummary();go(7)">Ver resumen →</button></div>
+    <div class="nav"><button class="btn-back" onclick="go(5)">← Atrás</button><button class="btn-next" onclick="doSummary()">Ver resumen →</button></div>
   </div>
 </div>
 
@@ -321,6 +321,12 @@ function selectOpt(el, name) {
   el.classList.add('selected');
   el.querySelector('input').checked = true;
 }
+  async function enviarDatos(payload) {
+    try {
+      await fetch(WEBHOOK_URL, { method:"POST", body:JSON.stringify(payload) });
+    } catch(e) { console.warn("No se pudo enviar al servidor", e); }
+  }
+
   const _canales = {ch_wa: false, ch_ig: false, ch_web: false};
   const _labels  = {ch_wa: 'WhatsApp', ch_ig: 'Instagram', ch_web: 'Página Web'};
   function toggleCanal(id) {
@@ -376,89 +382,99 @@ function addProc() {
 }
 
 // ── Summary ──
-function buildSummary() {
-  // Collect
-  const d = {};
-  d.nombre  = v('f_nombre'); d.esp = v('f_esp'); d.loc = v('f_loc');
-  d.precio  = v('f_precio'); d.dep = v('f_dep');
-  d.depOpt  = selOpt('dep'); d.refOpt = selOpt('ref'); d.refCond = v('f_refcond');
-  d.ig = v('f_ig'); d.web = v('f_web'); d.fin = selOpt('fin');
-  d.brex = v('f_brex'); d.titular = v('f_titular'); d.notas = v('f_notas');
-  d.canales = getCanales();
+  function doSummary() {
+    // Recolectar datos
+    const d = {};
+    d.nombre = v('f_nombre') || '—';
+    d.esp    = v('f_esp')    || '—';
+    d.loc    = v('f_loc')    || '—';
+    d.precio = v('f_precio') || '—';
+    d.dep    = v('f_dep')    || '';
+    d.depOpt = selOpt('dep') || '—';
+    d.refOpt = selOpt('ref') || '—';
+    d.refCond= v('f_refcond')|| '—';
+    d.ig     = v('f_ig')     || '—';
+    d.web    = v('f_web')    || '—';
+    d.fin    = selOpt('fin') || '—';
+    d.brex   = v('f_brex')   || '—';
+    d.titular= v('f_titular')|| '—';
+    d.notas  = v('f_notas')  || '—';
+    d.canales= getCanales()  || '—';
 
-  // Users
-  const users = [];
-  document.querySelectorAll('[id^=ur_]').forEach(row => {
-    const id = row.id.split('_')[1];
-    const n=v('un_'+id), e=v('ue_'+id), r=v('ur2_'+id);
-    if(n||e) users.push({n,e,r});
-  });
+    // Usuarios
+    const users = [];
+    document.querySelectorAll('[id^="ur_"]').forEach(row => {
+      const id = row.id.replace('ur_','');
+      const n = v('un_'+id), e = v('ue_'+id), r = v('ur2_'+id);
+      if(n || e) users.push({n:n||'—', e:e||'—', r:r||'—'});
+    });
 
-  // Schedule
-  const sched = [];
-  DAYS.forEach((day,i) => {
-    if(document.getElementById('day_'+i)?.checked)
-      sched.push({day, open:v('open_'+i), close:v('close_'+i)});
-  });
+    // Horarios
+    const sched = [];
+    DAYS.forEach((day,i) => {
+      const cb = document.getElementById('day_'+i);
+      if(cb && cb.checked) sched.push({day, open:v('open_'+i)||'—', close:v('close_'+i)||'—'});
+    });
 
-  // Procs
-  const procs = [];
-  document.querySelectorAll('[id^=pr_]').forEach(row => {
-    const id = row.id.split('_')[1];
-    const n=v('pn_'+id), f=v('pf_'+id), p=v('pp_'+id);
-    if(n) procs.push({n,f,p});
-  });
+    // Procedimientos
+    const procs = [];
+    document.querySelectorAll('[id^="pr_"]').forEach(row => {
+      const id = row.id.replace('pr_','');
+      const n = v('pn_'+id);
+      if(n) procs.push({n, f:v('pf_'+id)||'—', p:v('pp_'+id)||'—'});
+    });
 
-  // Render
-  let html = '';
+    // Construir HTML del resumen
+    let html = '';
+    html += sec('1. Datos generales',[
+      {k:'Clínica / Médico',v:d.nombre},{k:'Especialidad(es)',v:d.esp},{k:'Dirección',v:d.loc,full:true}
+    ]);
+    html += '<div class="sum-sec"><div class="sum-sec-title">2. Usuarios con acceso</div>';
+    if(users.length){
+      html += '<table class="sum-table"><tr><th>Nombre</th><th>Correo</th><th>Rol</th></tr>';
+      users.forEach(u => html += `<tr><td>${u.n}</td><td>${u.e}</td><td>${u.r}</td></tr>`);
+      html += '</table>';
+    } else {
+      html += '<div class="sum-item full"><div class="sum-val empty">Sin usuarios registrados</div></div>';
+    }
+    html += '</div>';
+    html += sec('3. Consulta y pagos',[
+      {k:'Precio consulta',v:d.precio},{k:'Depósito',v:d.depOpt+(d.dep?' — '+d.dep:'')},
+      {k:'Política de reembolsos',v:d.refOpt},{k:'Condiciones',v:d.refCond}
+    ]);
+    html += '<div class="sum-sec"><div class="sum-sec-title">4. Horarios de atención</div>';
+    if(sched.length){
+      html += '<table class="sum-table"><tr><th>Día</th><th>Apertura</th><th>Cierre</th></tr>';
+      sched.forEach(s => html += `<tr><td>${s.day}</td><td>${s.open}</td><td>${s.close}</td></tr>`);
+      html += '</table>';
+    } else {
+      html += '<div class="sum-item full"><div class="sum-val empty">Sin horarios seleccionados</div></div>';
+    }
+    html += '</div>';
+    html += sec('5. Integraciones y financiamiento',[
+      {k:'Canales',v:d.canales},{k:'Instagram',v:d.ig},{k:'Página web',v:d.web},{k:'Financiamiento',v:d.fin}
+    ]);
+    html += sec('6. Datos bancarios',[
+      {k:'Correo Brex',v:d.brex},{k:'Titular cuenta',v:d.titular}
+    ]);
+    html += '<div class="sum-sec"><div class="sum-sec-title">7. Procedimientos</div>';
+    if(procs.length){
+      html += '<table class="sum-table"><tr><th>Procedimiento</th><th>Precio fijo</th><th>Rango</th></tr>';
+      procs.forEach(p => html += `<tr><td>${p.n}</td><td>${p.f}</td><td>${p.p}</td></tr>`);
+      html += '</table>';
+    } else {
+      html += '<div class="sum-item full"><div class="sum-val empty">Sin procedimientos</div></div>';
+    }
+    html += '</div>';
+    if(d.notas !== '—') html += sec('Notas adicionales',[{k:'',v:d.notas,full:true}]);
 
-  html += sec('1. Datos generales', [
-    {k:'Clínica / Médico', v:d.nombre}, {k:'Especialidad(es)', v:d.esp}, {k:'Ubicación', v:d.loc}
-  ]);
+    document.getElementById('summary-content').innerHTML = html;
+    window._summaryData = {d, users, sched, procs};
+    enviarDatos({...d, users, sched, procs});
+    go(7);
+  }
 
-  html += `<div class="sum-sec"><div class="sum-sec-title">2. Usuarios con acceso</div>`;
-  if(users.length) {
-    html += `<table class="sum-table"><tr><th>Nombre</th><th>Correo</th><th>Rol</th></tr>`;
-    users.forEach(u => html += `<tr><td>${u.n||'—'}</td><td>${u.e||'—'}</td><td>${u.r||'—'}</td></tr>`);
-    html += `</table>`;
-  } else html += `<div class="sum-item full"><div class="sum-val empty">Sin usuarios registrados</div></div>`;
-  html += `</div>`;
-
-  html += sec('3. Consulta y pagos', [
-    {k:'Precio consulta', v:d.precio}, {k:'Depósito requerido', v:d.depOpt+(d.dep?' — '+d.dep:'')},
-    {k:'Política reembolsos', v:d.refOpt}, {k:'Condiciones', v:d.refCond}
-  ]);
-
-  html += `<div class="sum-sec"><div class="sum-sec-title">4. Horarios de atención</div>`;
-  if(sched.length) {
-    html += `<table class="sum-table"><tr><th>Día</th><th>Apertura</th><th>Cierre</th></tr>`;
-    sched.forEach(s => html += `<tr><td>${s.day}</td><td>${s.open}</td><td>${s.close}</td></tr>`);
-    html += `</table>`;
-  } html += `</div>`;
-
-  html += sec('5. Integraciones y financiamiento', [
-    {k:'Canales', v:d.canales}, {k:'Instagram', v:d.ig}, {k:'Página web', v:d.web}, {k:'Financiamiento', v:d.fin}
-  ]);
-
-  html += sec('6. Datos bancarios', [
-    {k:'Correo Brex', v:d.brex}, {k:'Titular cuenta', v:d.titular}
-  ]);
-
-  html += `<div class="sum-sec"><div class="sum-sec-title">7. Procedimientos</div>`;
-  if(procs.length) {
-    html += `<table class="sum-table"><tr><th>Procedimiento</th><th>Precio fijo</th><th>Rango</th></tr>`;
-    procs.forEach(p => html += `<tr><td>${p.n}</td><td>${p.f||'—'}</td><td>${p.p||'—'}</td></tr>`);
-    html += `</table>`;
-  } else html += `<div class="sum-item full"><div class="sum-val empty">Sin procedimientos</div></div>`;
-  html += `</div>`;
-
-  if(d.notas) html += sec('Notas adicionales', [{k:'', v:d.notas, full:true}]);
-
-  document.getElementById('summary-content').innerHTML = html;
-  window._summaryData = {d, users, sched, procs};
-  // Enviar automáticamente
-  enviarDatos({...d, users, sched, procs});
-}
+  function buildSummary() { doSummary(); }
 
 function sec(title, items) {
   let h = `<div class="sum-sec"><div class="sum-sec-title">${title}</div><div class="sum-grid">`;
