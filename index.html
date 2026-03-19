@@ -438,8 +438,8 @@ function addProc() {
     ]);
     html += '<div class="sum-sec"><div class="sum-sec-title">2. Usuarios con acceso</div>';
     if(users.length){
-      html += '<table class="sum-table"><tr><th>Nombre</th><th>Correo</th><th>Rol</th></tr>';
-      users.forEach(u => html += `<tr><td>${u.n}</td><td>${u.e}</td><td>${u.r}</td></tr>`);
+      html += '<table class="sum-table"><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th></tr>';
+      users.forEach(u => html += `<tr><td>${u.n}</td><td>${u.e}</td><td>${u.t}</td><td>${u.r}</td></tr>`);
       html += '</table>';
     } else {
       html += '<div class="sum-item full"><div class="sum-val empty">Sin usuarios registrados</div></div>';
