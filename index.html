@@ -504,7 +504,7 @@ function copyAll() {
   const {d, users, sched, procs} = sd;
   let txt = `HEVA — CONFIGURACIÓN\n${'═'.repeat(40)}\n\n`;
   txt += `DATOS GENERALES\nClínica/Médico: ${d.nombre}\nEspecialidad: ${d.esp}\nUbicación: ${d.loc}\n\n`;
-  txt += `USUARIOS\n${users.map(u=>`• ${u.n} | ${u.e} | ${u.r}`).join('\n')||'—'}\n\n`;
+  txt += `USUARIOS\n${users.map(u=>`• ${u.n} | ${u.e} | Tel: ${u.t||'—'} | ${u.r}`).join('\n')||'—'}\n\n`;
   txt += `PAGOS\nConsulta: ${d.precio}\nDepósito: ${d.depOpt}${d.dep?' — '+d.dep:''}\nReembolsos: ${d.refOpt}\nCondiciones: ${d.refCond||'—'}\n\n`;
   txt += `HORARIOS\n${sched.map(s=>`• ${s.day}: ${s.open} – ${s.close}`).join('\n')||'—'}\n\n`;
   txt += `INTEGRACIONES\nCanales: ${d.canales||'—'}\nInstagram: ${d.ig||'—'}\nWeb: ${d.web||'—'}\nFinanciamiento: ${d.fin||'—'}\n\n`;
