@@ -167,7 +167,7 @@
     <div class="sec-label">Paso 2 de 7</div>
     <div class="sec-title">¿Quiénes tendrán acceso?</div>
     <div class="sec-sub">Heva usa Magic Link — cada persona recibirá un enlace único en su correo para entrar a la plataforma. Sin contraseñas.</div>
-    <div class="tbl-hdr" style="grid-template-columns:1fr 1.4fr 1fr"><span>Nombre</span><span>Correo electrónico</span><span>Rol / Puesto</span></div>
+    <div class="tbl-hdr" style="grid-template-columns:1fr 1.4fr 1fr 1fr"><span>Nombre</span><span>Correo electrónico</span><span>Teléfono / Cel</span><span>Rol / Puesto</span></div>
     <div id="users-list"></div>
     <div class="add-btn" onclick="addUser()">+ Agregar usuario</div>
     <div class="nav"><button class="btn-back" onclick="go(1)">← Atrás</button><button class="btn-next" onclick="go(3)">Siguiente →</button></div>
@@ -205,7 +205,13 @@
   <div class="section-screen">
     <div class="sec-label">Paso 4 de 7</div>
     <div class="sec-title">Horarios de atención</div>
-    <div class="sec-sub">Activa los días en que Heva recibirá y agendará pacientes. Puedes ajustar las horas.</div>
+    <div class="sec-sub">Activa los días que quieras y ajusta las horas de inicio y cierre. Estos son los horarios en que Heva estará disponible para recibir y agendar pacientes.</div>
+    <div style="display:grid;grid-template-columns:110px 70px 1fr 1fr;gap:8px;margin-bottom:10px;">
+      <span style="font-size:.75rem;font-weight:700;color:var(--accent);">Día</span>
+      <span style="font-size:.75rem;font-weight:700;color:var(--accent);">Activo</span>
+      <span style="font-size:.75rem;font-weight:700;color:var(--accent);">Hora inicio</span>
+      <span style="font-size:.75rem;font-weight:700;color:var(--accent);">Hora cierre</span>
+    </div>
     <div id="schedule"></div>
     <div class="nav"><button class="btn-back" onclick="go(3)">← Atrás</button><button class="btn-next" onclick="go(5)">Siguiente →</button></div>
   </div>
@@ -360,9 +366,10 @@ function addUser() {
   const d = document.getElementById('users-list');
   const row = document.createElement('div');
   row.className = 'tbl-row'; row.id = 'ur_'+id;
-  row.style.gridTemplateColumns = '1fr 1.4fr 1fr auto';
+  row.style.gridTemplateColumns = '1fr 1.4fr 1fr 1fr auto';
   row.innerHTML = `<input type="text" placeholder="Nombre" id="un_${id}">
     <input type="email" placeholder="correo@ejemplo.com" id="ue_${id}">
+    <input type="tel" placeholder="+52 664 000 0000" id="ut_${id}">
     <input type="text" placeholder="Ej: Recepción" id="ur2_${id}">
     <button class="del-btn" onclick="document.getElementById('ur_${id}').remove()">✕</button>`;
   d.appendChild(row);
@@ -405,8 +412,8 @@ function addProc() {
     const users = [];
     document.querySelectorAll('[id^="ur_"]').forEach(row => {
       const id = row.id.replace('ur_','');
-      const n = v('un_'+id), e = v('ue_'+id), r = v('ur2_'+id);
-      if(n || e) users.push({n:n||'—', e:e||'—', r:r||'—'});
+      const n = v('un_'+id), e = v('ue_'+id), t = v('ut_'+id), r = v('ur2_'+id);
+      if(n || e) users.push({n:n||'—', e:e||'—', t:t||'—', r:r||'—'});
     });
 
     // Horarios
