@@ -496,7 +496,7 @@ function v(id) { return (document.getElementById(id)?.value||'').trim(); }
 function selOpt(name) { const el=document.querySelector(`[name=${name}]:checked`); return el?el.closest('.opt').querySelector('.opt-label').textContent:''; }
 
 // ── Enviar a Google Sheets ──
-const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyEDGqJhu8MTrXbSfiKKjl2DXWSwkK25CyZY_m0nSb0aPIhkVAgwDSb3h95qaonQkwX/exec";
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyehgFLOhTv-H9QvsTX5MkUTBC1w-FrVIA9EhT8DmFyq__wkSND7uILqwYEiySs5oWY/exec";
 
 function copyAll() {
   const sd = window._summaryData;
